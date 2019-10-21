@@ -3,20 +3,15 @@ import {
   PerspectiveCamera,
   Color,
   Scene,
-  BoxGeometry,
   Mesh,
   Euler,
   Quaternion,
-  ShaderMaterial,
   CubeTextureLoader,
-  MeshLambertMaterial,
-  CylinderGeometry
+  CylinderGeometry,
+  MeshStandardMaterial
 } from "three";
 import * as THREE from "three";
 import io from "socket.io-client";
-
-import vertShader from './vert.glsl'
-import fragShader from './frag.glsl'
 
 const renderer = new WebGLRenderer({
   antialias: true
@@ -67,17 +62,30 @@ new CubeTextureLoader().load(
   }
 );
 
-// Lightsaber
-const lightGeo = new CylinderGeometry(.5, .5, 20, 32);
-const lightMat = new MeshLambertMaterial({
-	emissive: '#0000FF',
-	reflectivity: 1,
-	refractionRatio: 1
-});
+// Lightsaber grip
+const lightGripGeo = new CylinderGeometry(0.5, 0.5, 2, 32);
+const lightGripMat = new MeshStandardMaterial({
+  color: '#636363',
+  emissive: '#636363',
+  roughness: 1,
+  metalness: 0
+})
 
-const lightSaber = new Mesh(lightGeo, lightMat);
-
+const lightSaber = new Mesh(lightGripGeo, lightGripMat)
+lightSaber.position.y = -7
 scene.add(lightSaber);
+
+// Lightsaber
+const lightLaserGeo = new CylinderGeometry(.5, .5, 20, 32);
+const lightLaserMat = new MeshStandardMaterial({
+  color: '#006496',
+  emissive: '#0095C4',
+  roughness: 0.5,
+  metalness: 0.5
+});
+const lightSaberLaser = new Mesh(lightLaserGeo, lightLaserMat);
+lightSaberLaser.position.y = 11
+lightSaber.add(lightSaberLaser)
 
 // Point light
 const light = new THREE.PointLight(0xffffff);
