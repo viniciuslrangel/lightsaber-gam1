@@ -1,60 +1,106 @@
-import { WebGLRenderer, PerspectiveCamera, Color, Scene, BoxGeometry, MeshLambertMaterial, Mesh, Euler, Quaternion, Vector3 } from 'three'
-import io from 'socket.io-client'
+import {
+  WebGLRenderer,
+  PerspectiveCamera,
+  Color,
+  Scene,
+  BoxGeometry,
+  Mesh,
+  Euler,
+  Quaternion,
+  ShaderMaterial,
+  CubeTextureLoader,
+  MeshLambertMaterial,
+  CylinderGeometry
+} from "three";
+import * as THREE from "three";
+import io from "socket.io-client";
+
+import vertShader from './vert.glsl'
+import fragShader from './frag.glsl'
 
 const renderer = new WebGLRenderer({
-	antialias: true
-})
-if (process.env.NODE_ENV === 'development') {
-	Array.from(document.body.querySelectorAll('canvas')).forEach(e => document.body.removeChild(e))
+  antialias: true
+});
+if (process.env.NODE_ENV === "development") {
+  Array.from(document.body.querySelectorAll("canvas")).forEach(e =>
+    document.body.removeChild(e)
+  );
 }
-document.body.appendChild(renderer.domElement)
-renderer.setPixelRatio(window.devicePixelRatio)
-renderer.setClearColor(new Color(0x010101))
+document.body.appendChild(renderer.domElement);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setClearColor(new Color(0x010101));
 
-const camera = new PerspectiveCamera(50, 1, 0.01, 100)
+const camera = new PerspectiveCamera(50, 1, 0.01, 1000);
 
 window.addEventListener(
-	'resize',
-	(() => {
-		const resize = () => {
-			const width = window.innerWidth
-			const height = window.innerHeight
-			renderer.setSize(width, height)
-			camera.aspect = width / height
-			camera.updateProjectionMatrix()
-		}
-		resize()
-		return resize
-	})()
-)
+  "resize",
+  (() => {
+    const resize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    };
+    resize();
+    return resize;
+  })()
+);
 
-camera.position.z = 40
+camera.position.z = 40;
 
-const scene = new Scene()
+const scene = new Scene();
 
-const lightGeo = new BoxGeometry(1, 10, 1)
-const lightMat = new MeshLambertMaterial({ color: 0x000000, emissive: 0x0000ff })
+// Skybox
 
-const lightSaber = new Mesh(lightGeo, lightMat)
+new CubeTextureLoader().load(
+  [
+    require("../../assets/frontImage.png"),
+    require("../../assets/backImage.png"),
+    require("../../assets/upImage.png"),
+    require("../../assets/downImage.png"),
+    require("../../assets/rightImage.png"),
+    require("../../assets/leftImage.png")
+  ],
+  texture => {
+    scene.background = texture;
+  }
+);
 
-scene.add(lightSaber)
+// Lightsaber
+const lightGeo = new CylinderGeometry(.5, .5, 20, 32);
+const lightMat = new MeshLambertMaterial({
+	emissive: '#0000FF',
+	reflectivity: 1,
+	refractionRatio: 1
+});
 
-let lastTime = 0
-renderer.setAnimationLoop(time => {
-	time *= 0.001
-	const delta = time - lastTime
-	lastTime = time
+const lightSaber = new Mesh(lightGeo, lightMat);
 
-	renderer.render(scene, camera)
-})
+scene.add(lightSaber);
 
-const socket = io(window.location.href)
+// Point light
+const light = new THREE.PointLight(0xffffff);
+light.position.set(0,250,0);
+scene.add(light);
 
-socket.on('rotation', data => {
-	const rot = new Euler().setFromQuaternion(new Quaternion().fromArray(data))
-	const { x, y, z } = rot
-	rot.z = -y
-	rot.y = -z
-	rot.x = x
-	lightSaber.setRotationFromEuler(rot)
-})
+// let lastTime = 0;
+renderer.setAnimationLoop(/* time */ () => {
+  /* time *= 0.001;
+  const delta = time - lastTime;
+  lastTime = time; */
+
+  renderer.render(scene, camera);
+});
+
+const socket = io(window.location.href);
+
+socket.on("rotation", data => {
+  const rot = new Euler().setFromQuaternion(new Quaternion().fromArray(data));
+  const { x, y, z } = rot;
+  rot.z = -y;
+  rot.y = -z;
+  rot.x = x;
+  camera.setRotationFromEuler(new Euler(rot.x * 0.1, rot.y * 0.1, rot.z * 0.1));
+  lightSaber.setRotationFromEuler(rot);
+});
