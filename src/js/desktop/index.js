@@ -1,4 +1,4 @@
-import { WebGLRenderer, PerspectiveCamera, Color, Scene, BoxGeometry, MeshLambertMaterial, Mesh, Vector3 } from 'three'
+import { WebGLRenderer, PerspectiveCamera, Color, Scene, BoxGeometry, MeshLambertMaterial, Mesh, Euler, Quaternion, Vector3 } from 'three'
 import io from 'socket.io-client'
 
 const renderer = new WebGLRenderer({
@@ -49,7 +49,12 @@ renderer.setAnimationLoop(time => {
 })
 
 const socket = io(window.location.href)
+
 socket.on('rotation', data => {
-    console.log(data)
-    lightSaber.quaternion.fromArray(data)
+	const rot = new Euler().setFromQuaternion(new Quaternion().fromArray(data))
+	const { x, y, z } = rot
+	rot.z = -y
+	rot.y = -z
+	rot.x = x
+	lightSaber.setRotationFromEuler(rot)
 })

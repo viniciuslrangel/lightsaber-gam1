@@ -5,8 +5,8 @@ import { createServer } from 'https'
 import fs from 'fs'
 import webpackDevMiddleware from 'webpack-dev-middleware'
 import webpackHotMiddleware from 'webpack-hot-middleware'
-import config from '../../webpack.dev.config.js'
-import entry from './src/index.js'
+import config from '../webpack.dev.config.js'
+import entry from './entry.js'
 
 const app = express(),
             DIST_DIR = __dirname,
