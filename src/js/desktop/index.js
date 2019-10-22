@@ -8,7 +8,9 @@ import {
   Quaternion,
   CubeTextureLoader,
   CylinderGeometry,
-  MeshStandardMaterial
+  MeshStandardMaterial,
+  Vector3,
+  Object3D
 } from "three";
 import * as THREE from "three";
 import io from "socket.io-client";
@@ -26,6 +28,8 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setClearColor(new Color(0x010101));
 
 const camera = new PerspectiveCamera(50, 1, 0.01, 1000);
+camera.position.z = 40
+camera.lookAt(0, 0, 0)
 
 window.addEventListener(
   "resize",
@@ -41,8 +45,6 @@ window.addEventListener(
     return resize;
   })()
 );
-
-camera.position.z = 40;
 
 const scene = new Scene();
 
@@ -62,6 +64,10 @@ new CubeTextureLoader().load(
   }
 );
 
+const lightSaber = new Object3D()
+lightSaber.rotateY(Math.PI / 2)
+scene.add(lightSaber)
+
 // Lightsaber grip
 const lightGripGeo = new CylinderGeometry(0.5, 0.5, 2, 32);
 const lightGripMat = new MeshStandardMaterial({
@@ -71,9 +77,9 @@ const lightGripMat = new MeshStandardMaterial({
   metalness: 0
 })
 
-const lightSaber = new Mesh(lightGripGeo, lightGripMat)
-lightSaber.position.y = -7
-scene.add(lightSaber);
+const lightGrip = new Mesh(lightGripGeo, lightGripMat)
+lightGrip.position.y = -7
+lightSaber.add(lightGrip);
 
 // Lightsaber
 const lightLaserGeo = new CylinderGeometry(.5, .5, 20, 32);
@@ -85,7 +91,7 @@ const lightLaserMat = new MeshStandardMaterial({
 });
 const lightSaberLaser = new Mesh(lightLaserGeo, lightLaserMat);
 lightSaberLaser.position.y = 11
-lightSaber.add(lightSaberLaser)
+lightGrip.add(lightSaberLaser)
 
 // Point light
 const light = new THREE.PointLight(0xffffff);
@@ -103,12 +109,11 @@ renderer.setAnimationLoop(/* time */ () => {
 
 const socket = io(window.location.href);
 
+// const axis = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0).normalize(), Math.PI / 2)
+const rot = new Euler()
+
 socket.on("rotation", data => {
-  const rot = new Euler().setFromQuaternion(new Quaternion().fromArray(data));
-  const { x, y, z } = rot;
-  rot.z = -y;
-  rot.y = -z;
-  rot.x = x;
-  camera.setRotationFromEuler(new Euler(rot.x * 0.1, rot.y * 0.1, rot.z * 0.1));
-  lightSaber.setRotationFromEuler(rot);
+  rot.set(0, -data.gamma * Math.PI / 180, (data.beta * Math.PI / 180) - Math.PI / 2)
+  lightGrip.setRotationFromEuler(rot)
+  camera.rotation.z = rot.y * (rot.z > 0 ? 0.1 : -0.1)
 });

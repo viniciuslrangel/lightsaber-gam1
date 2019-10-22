@@ -1,50 +1,32 @@
-import io from 'socket.io-client'
-import { Quaternion } from 'three'
-import { RelativeOrientationSensor } from 'motion-sensors-polyfill'
+import io from "socket.io-client";
 
-document.writeln('Lightsaber')
+document.writeln("Lightsaber");
 
 if (window.DeviceOrientationEvent) {
-	document.writeln('Supported')
+  document.writeln("Supported");
 } else {
-	document.writeln('Not supported')
+  document.writeln("Not supported");
 }
 
-const socket = io(window.location.href)
+const socket = io(window.location.href);
 
-let count = 0
+let count = 0;
 
-const sensor = new RelativeOrientationSensor({
-    frequency: 60,
-    referenceFrame: 'device'
-})
+window.addEventListener(
+  "compassneedscalibration",
+  e => {
+    e.preventDefault();
+    alert("Calibration requried. Twist your phone a few times");
+  },
+  true
+);
 
-Promise.all([navigator.permissions.query({ name: "accelerometer" }),
-             navigator.permissions.query({ name: "gyroscope" })])
-       .then(results => {
-         if (results.every(result => result.state === "granted")) {
-           sensor.start()
-         } else {
-           alert("No permissions to use AbsoluteOrientationSensor.")
-         }
-   });
+const feedback = document.body.appendChild(document.createElement("p"));
 
-const btn = document.body.appendChild(document.createElement('button'))
-btn.innerText = "Calibrate to zero"
-
-const feedback = document.body.appendChild(document.createElement('p'))
-
-let calibrate = new Quaternion()
-
-btn.onclick = () => {
-  calibrate.fromArray(sensor.quaternion).inverse()
-}
-
-const readed = new Quaternion()
-sensor.onreading = () => {
-    feedback.innerText = `${count++} updating`
-    readed.fromArray(sensor.quaternion)
-    socket.emit('rotation', readed.multiply(calibrate).toArray())
-}
-
-
+window.addEventListener("deviceorientation", e => {
+  feedback.innerText = `${count++} updating`;
+  socket.emit("rotation", {
+    beta: e.beta,
+    gamma: e.gamma
+  });
+});
