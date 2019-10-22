@@ -7,5 +7,8 @@ export default function entry(httpServer) {
 		client.on('rotation', (data) => {
 			client.broadcast.emit('rotation', data)
 		})
+		client.on('motion', (data) => {
+			client.broadcast.emit('motion', data)
+		})
 	})
 }

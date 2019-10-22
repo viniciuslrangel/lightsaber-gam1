@@ -3,17 +3,14 @@ import {
   PerspectiveCamera,
   Color,
   Scene,
-  Mesh,
   Euler,
-  Quaternion,
   CubeTextureLoader,
-  CylinderGeometry,
-  MeshStandardMaterial,
-  Vector3,
-  Object3D
+  Quaternion,
+  Vector3
 } from "three";
 import * as THREE from "three";
 import io from "socket.io-client";
+import LightSaber from "./lightSaber";
 
 const renderer = new WebGLRenderer({
   antialias: true
@@ -28,8 +25,8 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setClearColor(new Color(0x010101));
 
 const camera = new PerspectiveCamera(50, 1, 0.01, 1000);
-camera.position.z = 40
-camera.lookAt(0, 0, 0)
+camera.position.z = 40;
+camera.lookAt(0, 0, 0);
 
 window.addEventListener(
   "resize",
@@ -64,56 +61,39 @@ new CubeTextureLoader().load(
   }
 );
 
-const lightSaber = new Object3D()
-lightSaber.rotateY(Math.PI / 2)
-scene.add(lightSaber)
-
-// Lightsaber grip
-const lightGripGeo = new CylinderGeometry(0.5, 0.5, 2, 32);
-const lightGripMat = new MeshStandardMaterial({
-  color: '#636363',
-  emissive: '#636363',
-  roughness: 1,
-  metalness: 0
-})
-
-const lightGrip = new Mesh(lightGripGeo, lightGripMat)
-lightGrip.position.y = -7
-lightSaber.add(lightGrip);
-
-// Lightsaber
-const lightLaserGeo = new CylinderGeometry(.5, .5, 20, 32);
-const lightLaserMat = new MeshStandardMaterial({
-  color: '#006496',
-  emissive: '#0095C4',
-  roughness: 0.5,
-  metalness: 0.5
-});
-const lightSaberLaser = new Mesh(lightLaserGeo, lightLaserMat);
-lightSaberLaser.position.y = 11
-lightGrip.add(lightSaberLaser)
+const lightSaber = (window.saber = new LightSaber());
+scene.add(lightSaber);
 
 // Point light
 const light = new THREE.PointLight(0xffffff);
-light.position.set(0,250,0);
+light.position.set(0, 250, 0);
 scene.add(light);
 
 // let lastTime = 0;
-renderer.setAnimationLoop(/* time */ () => {
-  /* time *= 0.001;
+renderer.setAnimationLoop(
+  /* time */ () => {
+    /* time *= 0.001;
   const delta = time - lastTime;
   lastTime = time; */
 
-  renderer.render(scene, camera);
-});
+    renderer.render(scene, camera);
+  }
+);
 
 const socket = io(window.location.href);
 
 // const axis = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0).normalize(), Math.PI / 2)
-const rot = new Euler()
+const q1 = new Quaternion();
+const axis1 = new Vector3(0, 1, 0);
+const q2 = new Quaternion();
+const axis2 = new Vector3(0, 0, 1);
 
 socket.on("rotation", data => {
-  rot.set(0, -data.gamma * Math.PI / 180, (data.beta * Math.PI / 180) - Math.PI / 2)
-  lightGrip.setRotationFromEuler(rot)
-  camera.rotation.z = rot.y * (rot.z > 0 ? 0.1 : -0.1)
+  q1.setFromAxisAngle(axis1, (-data.gamma * Math.PI) / 180);
+  q2.setFromAxisAngle(axis2, (data.beta * Math.PI) / 180 - Math.PI / 2);
+  lightSaber.setRotationFromQuaternion(q1.multiply(q2));
 });
+
+socket.on("motion", data => {
+  camera.rotation.z = camera.rotation.z * 0.9 + (data * Math.PI / 180 * 0.8) * 0.1
+})

@@ -22,6 +22,7 @@ window.addEventListener(
 );
 
 const feedback = document.body.appendChild(document.createElement("p"));
+const feedbackMotion = document.body.appendChild(document.createElement("p"));
 
 window.addEventListener("deviceorientation", e => {
   feedback.innerText = `${count++} updating`;
@@ -30,3 +31,8 @@ window.addEventListener("deviceorientation", e => {
     gamma: e.gamma
   });
 });
+
+window.addEventListener("devicemotion", e => {
+  feedbackMotion.innerText = `${e.acceleration.z}`;
+  socket.emit("motion", e.acceleration.z)
+})
