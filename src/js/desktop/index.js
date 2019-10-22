@@ -95,5 +95,5 @@ socket.on("rotation", data => {
 });
 
 socket.on("motion", data => {
-  camera.rotation.z = camera.rotation.z * 0.9 + (data * Math.PI / 180 * 0.8) * 0.1
+  camera.rotation.z = camera.rotation.z * 0.9 + (data * Math.PI / 180 * 0.1) * 0.1
 })
