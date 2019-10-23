@@ -26,7 +26,6 @@ startBtn.onclick = () => {
 
   let context = new AudioContext();
 
-  let soundEnabled = false;
   let idleSound = null;
   let movingBuffer = null;
   let moving = null;
@@ -51,7 +50,7 @@ startBtn.onclick = () => {
           movingBuffer = e;
         })
       )
-  ).then(() => (soundEnabled = true));
+  ).then(() => {});
 
   const feedback = document.body.appendChild(document.createElement("p"));
   const feedbackMotion = document.body.appendChild(document.createElement("p"));

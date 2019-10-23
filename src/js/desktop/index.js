@@ -3,14 +3,13 @@ import {
   PerspectiveCamera,
   Color,
   Scene,
-  Euler,
   CubeTextureLoader,
   Quaternion,
   Vector3
 } from "three";
 import * as THREE from "three";
 import io from "socket.io-client";
-import LightSaber from "./lightSaber";
+import LightSaber from "./LightSaber";
 
 const renderer = new WebGLRenderer({
   antialias: true
